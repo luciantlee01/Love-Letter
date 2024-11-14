@@ -77,16 +77,15 @@ const AudioLoader = {
         
         // Define all songs with proper paths
         const songPaths = [
-            "愛你但說不出口.mp3",
-            "SILK.mp3",
+            "Karencici - 愛你但說不出口.mp3",
+            "P-Lo, Ymtk - SILK.mp3",
             "Baby Bash - Suga Suga.mp3",
             "Clairo - Add Up My Love.mp3",
             "Giveon - Stuck On You.mp3",
             "Raveena - If Only.mp3",
             "slchld - you won't be there for me.mp3",
             "Still Woozy - Anyone But You.mp3",
-            "박재범 (Jay Park) & 닝닝 (NINGNING) - 妳在哪裡 (WYA) Remix.mp3",
-            "Sabrina Carpenter - Juno.mp3"
+            "박재범 (Jay Park) & 닝닝 (NINGNING) - 妳在哪裡 (WYA) Remix.mp3"
         ].map(filename => {
             // Ensure the path is properly formatted
             let path = `${basePath}/audio/${filename}`;
@@ -112,9 +111,9 @@ function initializeAudioControls() {
     const songTitleElement = document.getElementById('song-title');
 
     // Make sure first song is properly set
-    var firstSong = "audio/Karencici -  愛你但說不出口.mp3";
+    var firstSong = "audio/Karencici - 愛你但說不出口.mp3";
     var otherSongs = [
-        "audio/SILK.mp3",
+        "audio/P-Lo, Ymtk - SILK.mp3",
         "audio/Baby Bash - Suga Suga.mp3",
         "audio/Clairo - Add Up My Love.mp3",
         "audio/Giveon - Stuck On You.mp3",
@@ -127,51 +126,51 @@ function initializeAudioControls() {
     audioControls.songs = [firstSong].concat(otherSongs.sort(() => Math.random() - 0.5));
     
     function playSong(index) {
-        if (!audioControls.songs[index]) {
-            console.error('Invalid song index or no songs available');
-            return;
-        }
-    
-        const songPath = audioControls.songs[index];
-        
-        // Update audio source with error handling
-        try {
-            if (audioPreloader.src.includes(songPath)) {
-                const temp = currentAudioPlayer;
-                currentAudioPlayer = audioPreloader;
-                audioPreloader = temp;
-            } else {
-                currentAudioPlayer.src = songPath;
-            }
-    
-            // Update song title
-            const songTitleElement = document.getElementById('song-title');
-            if (songTitleElement) {
-                songTitleElement.textContent = getSongName(songPath);
-            }
-    
-            // Play with error handling
-            const playPromise = currentAudioPlayer.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    currentAudioPlayer.muted = false;
-                    const playPauseBtn = document.getElementById("play-pause");
-                    if (playPauseBtn) {
-                        playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
-                    }
-                    preloadNextSong();
-                }).catch(error => {
-                    console.error("Playback failed:", error);
-                    const songTitleElement = document.getElementById('song-title');
-                    if (songTitleElement) {
-                        songTitleElement.textContent = `Error playing audio: ${error.message}`;
-                    }
-                });
-            }
-        } catch (error) {
-            console.error('Error in playSong:', error);
-        }
+    if (!audioControls.songs[index]) {
+        console.error('Invalid song index or no songs available');
+        return;
     }
+
+    const songPath = audioControls.songs[index];
+    
+    // Update audio source with error handling
+    try {
+        if (audioPreloader.src.includes(songPath)) {
+            const temp = currentAudioPlayer;
+            currentAudioPlayer = audioPreloader;
+            audioPreloader = temp;
+        } else {
+            currentAudioPlayer.src = songPath;
+        }
+
+        // Update song title
+        const songTitleElement = document.getElementById('song-title');
+        if (songTitleElement) {
+            songTitleElement.textContent = getSongName(songPath);
+        }
+
+        // Play with error handling
+        const playPromise = currentAudioPlayer.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                currentAudioPlayer.muted = false;
+                const playPauseBtn = document.getElementById("play-pause");
+                if (playPauseBtn) {
+                    playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
+                }
+                preloadNextSong();
+            }).catch(error => {
+                console.error("Playback failed:", error);
+                const songTitleElement = document.getElementById('song-title');
+                if (songTitleElement) {
+                    songTitleElement.textContent = `Error playing audio: ${error.message}`;
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error in playSong:', error);
+    }
+}
 
     function nextSong() {
         audioControls.previousIndex = audioControls.songIndex;
