@@ -57,16 +57,16 @@ function initializeAudioControls() {
     const baseUrl = getBaseUrl();
 
     // Setup songs with correct paths
-    var firstSong = `${baseUrl}audio/Love you.mp3`;
+    var firstSong = `${baseUrl}audio/Karencici - 愛你但說不出口.mp3`;
     var otherSongs = [
-        "audio/SILK.mp3",
-        "audio/Suga Suga.mp3",
-        "audio/Add Up My Love.mp3",
-        "audio/Stuck On You.mp3",
-        "audio/If Only.mp3",
-        "audio/you won't be there for me.mp3",
-        "audio/Anyone But You.mp3",
-        "audio/(WYA) Remix.mp3",
+        "audio/P-Lo, Ymtk - SILK.mp3",
+        "audio/Baby Bash - Suga Suga.mp3",
+        "audio/Clairo - Add Up My Love.mp3",
+        "audio/Giveon - Stuck On You.mp3",
+        "audio/Raveena - If Only.mp3",
+        "audio/slchld - you won't be there for me.mp3",
+        "audio/Still Woozy - Anyone But You.mp3",
+        "audio/Jay Park - (WYA) Remix.mp3",
         "audio/Sabrina Carpenter - Juno.mp3",
     ].map(song => `${baseUrl}${song}`);
 
@@ -251,16 +251,16 @@ function init() {
     const prevBtn = document.getElementById("prev");
     const songTitleElement = document.getElementById('song-title');
 
-    var firstSong = "audio/Love you.mp3";
+    var firstSong = "audio/Karencici - 愛你但說不出口.mp3";
     var otherSongs = [
-        "audio/SILK.mp3",
-        "audio/Suga Suga.mp3",
-        "audio/Add Up My Love.mp3",
-        "audio/Stuck On You.mp3",
-        "audio/If Only.mp3",
-        "audio/you won't be there for me.mp3",
-        "audio/Anyone But You.mp3",
-        "audio/(WYA) Remix.mp3",
+        "audio/P-Lo, Ymtk - SILK.mp3",
+        "audio/Baby Bash - Suga Suga.mp3",
+        "audio/Clairo - Add Up My Love.mp3",
+        "audio/Giveon - Stuck On You.mp3",
+        "audio/Raveena - If Only.mp3",
+        "audio/slchld - you won't be there for me.mp3",
+        "audio/Still Woozy - Anyone But You.mp3",
+        "audio/Jay Park - (WYA) Remix.mp3",
         "audio/Sabrina Carpenter - Juno.mp3",
     ];
 
