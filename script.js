@@ -36,53 +36,71 @@ var audioControls = {
     isInitialized: false
 };
 
+// Configure audio context with user interaction
+let audioContext = null;
+
 function initializeAudioControls() {
     const playPauseBtn = document.getElementById("play-pause");
     const nextBtn = document.getElementById("next");
     const prevBtn = document.getElementById("prev");
     const songTitleElement = document.getElementById('song-title');
 
-    // Configure audio context with user interaction
-    let audioContext;
+    // Get the correct base URL for GitHub Pages
+    const getBaseUrl = () => {
+        const fullPath = window.location.pathname;
+        const repoName = fullPath.split('/')[1]; // Get repository name
+        return window.location.hostname.includes('github.io') 
+            ? `/${repoName}/`
+            : '/';
+    };
 
-    // Function to ensure audio context is initialized
-    async function initAudioContext() {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioContext.state === 'suspended') {
-                await audioContext.resume();
-            }
-        }
-        return audioContext;
-    }
+    const baseUrl = getBaseUrl();
 
-    // Ensure base URL is correct for GitHub Pages
-    const baseURL = window.location.hostname.includes('github.io') 
-        ? `${window.location.pathname.split('/').slice(0, -1).join('/')}/`
-        : '/';
-
-    // Make sure first song is properly set with correct path
-    var firstSong = `https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Love%20you.mp3?raw=true`;
+    // Setup songs with correct paths
+    var firstSong = `${baseUrl}audio/Love you.mp3`;
     var otherSongs = [
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/SILK.mp3?raw=true",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Suga%20Suga.mp3?raw=true",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Add%20Up%20My%20Love.mp3?raw=true",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Stuck%20On%20You.mp3?raw=true",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/If%20Only.mp3?raw=true",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/you%20won't%20be%20there%20for%20me.mp3?raw=true",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Anyone%20But%20You.mp3?raw=true",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/(WYA)%20Remix.mp3?raw=true",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Juno.mp3?raw=true",
-    ].map(song => `${baseURL}${song}`);
+        "audio/SILK.mp3",
+        "audio/Suga Suga.mp3",
+        "audio/Add Up My Love.mp3",
+        "audio/Stuck On You.mp3",
+        "audio/If Only.mp3",
+        "audio/you won't be there for me.mp3",
+        "audio/Anyone But You.mp3",
+        "audio/(WYA) Remix.mp3",
+        "audio/Sabrina Carpenter - Juno.mp3",
+    ].map(song => `${baseUrl}${song}`);
 
     audioControls.songs = [firstSong].concat(otherSongs.sort(() => Math.random() - 0.5));
 
+    // Initialize AudioContext after user interaction
+    async function initAudioContextAndPlay() {
+        try {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+
+            // Create audio element source if needed
+            const source = audioContext.createMediaElementSource(currentAudioPlayer);
+            source.connect(audioContext.destination);
+
+            // Start playing the first song
+            playSong(0);
+        } catch (error) {
+            console.error('Error initializing audio context:', error);
+        }
+    }
+
     async function playSong(index) {
         try {
-            // Ensure audio context is initialized
-            await initAudioContext();
+            // Ensure the audio context is running
+            if (audioContext && audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
 
-            // Set the source
             if (audioPreloader.src.includes(audioControls.songs[index])) {
                 const temp = currentAudioPlayer;
                 currentAudioPlayer = audioPreloader;
@@ -91,10 +109,8 @@ function initializeAudioControls() {
                 currentAudioPlayer.src = audioControls.songs[index];
             }
 
-            // Update UI
             songTitleElement.textContent = getSongName(audioControls.songs[index]);
 
-            // Load and play with error handling
             await currentAudioPlayer.load();
             const playPromise = currentAudioPlayer.play();
 
@@ -105,18 +121,13 @@ function initializeAudioControls() {
                 preloadNextSong();
             }
         } catch (error) {
-            console.warn("Playback failed:", error);
-            // Retry logic with a delay
+            console.error('Playback failed:', error);
             setTimeout(() => {
-                currentAudioPlayer.play().catch(e => {
-                    console.warn("Retry failed:", error);
-                    playPauseBtn.innerHTML = '<div class="play-icon"></div>';
-                });
+                currentAudioPlayer.play().catch(e => console.warn("Retry failed:", e));
             }, 1000);
         }
     }
 
-    // Preload next song
     function preloadNextSong() {
         const nextIndex = (audioControls.songIndex + 1) % audioControls.songs.length;
         if (!audioPreloader.src.includes(audioControls.songs[nextIndex])) {
@@ -125,14 +136,34 @@ function initializeAudioControls() {
         }
     }
 
-    // Set up next and previous song controls
-    function nextSong() {
+    // Initialize audio only after user interaction
+    document.addEventListener('click', function startAudio() {
+        document.removeEventListener('click', startAudio);
+        initAudioContextAndPlay();
+    }, { once: true });
+
+    // Event listeners
+    playPauseBtn.addEventListener("click", () => {
+        if (currentAudioPlayer.paused) {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => currentAudioPlayer.play());
+            } else {
+                currentAudioPlayer.play();
+            }
+            playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
+        } else {
+            currentAudioPlayer.pause();
+            playPauseBtn.innerHTML = '<div class="play-icon"></div>';
+        }
+    });
+
+    nextBtn.addEventListener("click", () => {
         audioControls.previousIndex = audioControls.songIndex;
         audioControls.songIndex = (audioControls.songIndex + 1) % audioControls.songs.length;
         playSong(audioControls.songIndex);
-    }
+    });
 
-    function prevSong() {
+    prevBtn.addEventListener("click", () => {
         const currentTime = Date.now();
         if (currentTime - audioControls.prevClickTime < 500) {
             audioControls.songIndex = (audioControls.songIndex - 1 + audioControls.songs.length) % audioControls.songs.length;
@@ -141,41 +172,18 @@ function initializeAudioControls() {
             currentAudioPlayer.currentTime = 0;
         }
         audioControls.prevClickTime = currentTime;
-    }
-
-    // Event listeners for audio controls
-    currentAudioPlayer.addEventListener("ended", nextSong);
-
-    playPauseBtn.addEventListener("click", () => {
-        if (currentAudioPlayer.paused) {
-            currentAudioPlayer.play();
-            playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
-        } else {
-            currentAudioPlayer.pause();
-            playPauseBtn.innerHTML = '<div class="play-icon"></div>';
-        }
     });
 
-    nextBtn.addEventListener("click", nextSong);
-    prevBtn.addEventListener("click", prevSong);
+    currentAudioPlayer.addEventListener("ended", () => {
+        audioControls.previousIndex = audioControls.songIndex;
+        audioControls.songIndex = (audioControls.songIndex + 1) % audioControls.songs.length;
+        playSong(audioControls.songIndex);
+    });
 
-    // Event listener to ensure user gesture initializes audio context
-    document.addEventListener('click', async function initializeAudio() {
-        try {
-            await initAudioContext();
-            document.removeEventListener('click', initializeAudio);
-        } catch (error) {
-            console.warn("Audio context initialization failed:", error);
-        }
-    }, { once: true });
-
-    // Helper function to format song title
+    // Helper function to get formatted song name
     function getSongName(path) {
         return path.replace('audio/', '').replace('.mp3', '');
     }
-
-    preloadNextSong();
-    audioControls.isInitialized = true;
 
     return playSong;
 }
@@ -345,36 +353,36 @@ function init() {
     }
 
     // Set up click handler
-    if (startPrompt) {
-        document.addEventListener('click', function startExperience(e) {
-            // Remove the click listener after the first click
-            document.removeEventListener('click', startExperience);
+    document.addEventListener('click', function startExperience(e) {
+        // Remove the click listener after the first click
+        document.removeEventListener('click', startExperience);
         
-            // Resume the audio context if suspended
-            if (currentAudioPlayer.context && currentAudioPlayer.context.state === 'suspended') {
-                currentAudioPlayer.context.resume().then(() => {
-                    console.log('Audio context resumed successfully');
-                }).catch(error => console.warn("Error resuming audio context:", error));
-            }
+        // Resume the audio context if suspended
+        if (currentAudioPlayer.context && currentAudioPlayer.context.state === 'suspended') {
+            currentAudioPlayer.context.resume().then(() => {
+                console.log('Audio context resumed successfully');
+            }).catch(error => console.warn("Error resuming audio context:", error));
+        }
         
-            // Hide start prompt
+        // Hide start prompt
+        if (startPrompt) {
             startPrompt.style.display = 'none';
+        }
         
-            // Show controls with slight delay
-            setTimeout(() => {
-                controlElements.forEach(element => {
-                    if (element) element.classList.add('visible');
-                });
-            }, 500);
+        // Show controls with slight delay
+        setTimeout(() => {
+            controlElements.forEach(element => {
+                if (element) element.classList.add('visible');
+            });
+        }, 500);
         
-            // Start everything
-            playSong(songIndex);
-            heartAnimation();
-            changeText();
-            initCursor();
-            initFireworks();
-        });
-    }
+        // Start everything
+        playSong(songIndex);
+        heartAnimation();
+        changeText();
+        initCursor();
+        initFireworks();
+    });
 }
 
 // Cursor and trail effect
