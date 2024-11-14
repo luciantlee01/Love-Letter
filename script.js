@@ -62,17 +62,17 @@ function initializeAudioControls() {
         : '/';
 
     // Make sure first song is properly set with correct path
-    var firstSong = `https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Love%20you.mp3`;
+    var firstSong = `https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Love%20you.mp3?raw=true`;
     var otherSongs = [
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/SILK.mp3",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Suga%20Suga.mp3",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Add%20Up%20My%20Love.mp3",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Stuck%20On%20You.mp3",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/If%20Only.mp3",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/you%20won't%20be%20there%20for%20me.mp3",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Anyone%20But%20You.mp3",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/(WYA)%20Remix.mp3",
-        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Juno.mp3",
+        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/SILK.mp3?raw=true",
+        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Suga%20Suga.mp3?raw=true",
+        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Add%20Up%20My%20Love.mp3?raw=true",
+        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Stuck%20On%20You.mp3?raw=true",
+        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/If%20Only.mp3?raw=true",
+        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/you%20won't%20be%20there%20for%20me.mp3?raw=true",
+        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Anyone%20But%20You.mp3?raw=true",
+        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/(WYA)%20Remix.mp3?raw=true",
+        "https://github.com/luciantlee01/Love-Letter-2024/blob/main/audio/Juno.mp3?raw=true",
     ].map(song => `${baseURL}${song}`);
 
     audioControls.songs = [firstSong].concat(otherSongs.sort(() => Math.random() - 0.5));
