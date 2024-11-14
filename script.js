@@ -36,6 +36,75 @@ var audioControls = {
     isInitialized: false
 };
 
+// Audio loading utility with error handling
+const AudioLoader = {
+    // Maximum file size GitHub typically allows (in bytes)
+    MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
+
+    // Get the base path for the current environment
+    getBasePath() {
+        const path = window.location.pathname.split('/');
+        // Remove filename if present
+        if (path[path.length - 1].includes('.')) {
+            path.pop();
+        }
+        return path.join('/');
+    },
+
+    // Validate and load audio file
+    async validateAudioFile(path) {
+        try {
+            const response = await fetch(path);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const contentLength = response.headers.get('content-length');
+            if (contentLength && parseInt(contentLength) > this.MAX_FILE_SIZE) {
+                throw new Error('File size exceeds GitHub limit of 100MB');
+            }
+            return path;
+        } catch (error) {
+            console.error(`Failed to load audio file ${path}:`, error);
+            // You might want to update your UI here to show the error
+            document.getElementById('song-title').textContent = `Error loading audio: ${error.message}`;
+            return null;
+        }
+    },
+
+    // Initialize audio with proper paths and error handling
+    async initializeAudio() {
+        const basePath = this.getBasePath();
+        
+        // Define all songs with proper paths
+        const songPaths = [
+            "愛你但說不出口.mp3",
+            "SILK.mp3",
+            "Baby Bash - Suga Suga.mp3",
+            "Clairo - Add Up My Love.mp3",
+            "Giveon - Stuck On You.mp3",
+            "Raveena - If Only.mp3",
+            "slchld - you won't be there for me.mp3",
+            "Still Woozy - Anyone But You.mp3",
+            "박재범 (Jay Park) & 닝닝 (NINGNING) - 妳在哪裡 (WYA) Remix.mp3",
+            "Sabrina Carpenter - Juno.mp3"
+        ].map(filename => {
+            // Ensure the path is properly formatted
+            let path = `${basePath}/audio/${filename}`;
+            // Remove any double slashes except for protocol://
+            path = path.replace(/([^:]\/)\/+/g, "$1");
+            return path;
+        });
+
+        // Validate each song
+        const validatedSongs = await Promise.all(
+            songPaths.map(path => this.validateAudioFile(path))
+        );
+
+        // Filter out any null values from failed validations
+        return validatedSongs.filter(song => song !== null);
+    }
+};
+
 function initializeAudioControls() {
     const playPauseBtn = document.getElementById("play-pause");
     const nextBtn = document.getElementById("next");
@@ -58,30 +127,49 @@ function initializeAudioControls() {
     audioControls.songs = [firstSong].concat(otherSongs.sort(() => Math.random() - 0.5));
     
     function playSong(index) {
-        if (audioPreloader.src.includes(audioControls.songs[index])) {
-            const temp = currentAudioPlayer;
-            currentAudioPlayer = audioPreloader;
-            audioPreloader = temp;
-        } else {
-            currentAudioPlayer.src = audioControls.songs[index];
+        if (!audioControls.songs[index]) {
+            console.error('Invalid song index or no songs available');
+            return;
         }
-
-        songTitleElement.textContent = getSongName(audioControls.songs[index]);
+    
+        const songPath = audioControls.songs[index];
         
-        // Ensure play promise is handled properly
-        const playPromise = currentAudioPlayer.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                currentAudioPlayer.muted = false;
-                playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
-                preloadNextSong();
-            }).catch(error => {
-                console.warn("Playback failed:", error);
-                // Try playing again after a short delay
-                setTimeout(() => {
-                    currentAudioPlayer.play().catch(e => console.warn("Retry failed:", e));
-                }, 100);
-            });
+        // Update audio source with error handling
+        try {
+            if (audioPreloader.src.includes(songPath)) {
+                const temp = currentAudioPlayer;
+                currentAudioPlayer = audioPreloader;
+                audioPreloader = temp;
+            } else {
+                currentAudioPlayer.src = songPath;
+            }
+    
+            // Update song title
+            const songTitleElement = document.getElementById('song-title');
+            if (songTitleElement) {
+                songTitleElement.textContent = getSongName(songPath);
+            }
+    
+            // Play with error handling
+            const playPromise = currentAudioPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    currentAudioPlayer.muted = false;
+                    const playPauseBtn = document.getElementById("play-pause");
+                    if (playPauseBtn) {
+                        playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
+                    }
+                    preloadNextSong();
+                }).catch(error => {
+                    console.error("Playback failed:", error);
+                    const songTitleElement = document.getElementById('song-title');
+                    if (songTitleElement) {
+                        songTitleElement.textContent = `Error playing audio: ${error.message}`;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error in playSong:', error);
         }
     }
 
@@ -128,148 +216,168 @@ function initializeAudioControls() {
     return playSong;
 }
 
-function init() {
+async function init() {
     if (loaded) return;
     loaded = true;
-
-    // Add styles
-    const style = document.createElement('style');
-    style.textContent = `
-        .hidden-initially {
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s ease-in-out;
-        }
-        .visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-    `;
-    document.head.appendChild(style);
-
-    var mobile = window.isDevice;
-    var koef = mobile ? 0.5 : 1;
-    var canvas = document.getElementById('heart');
-    var ctx = canvas.getContext('2d');
-    var width = canvas.width = koef * innerWidth;
-    var height = canvas.height = koef * innerHeight;
-
-    ctx.fillStyle = "rgba(0,0,0,1)";
-    ctx.fillRect(0, 0, width, height);
-
-    // Hide controls initially
-    const controlElements = document.querySelectorAll('#fireworks-btn, #audio-controls');
-    controlElements.forEach(element => {
-        if (element) element.classList.add('hidden-initially');
-    });
-
-    var textContainer = document.getElementById('text-container');
-    var messages = [
-        "Hey bab, I know this is very unconventional",
-        "But I thought to try this new letter giving idea for your birthday",
-        "I wanted to put my skills to the test and make something special for you",
-        "I figured, I should make something memorable and last forever. Even to the end of time...",
-        "I'm writing this to you November 13th, 2024 at home, waiting for you to come over to celebrate your birthday weekend",
-        "We're going to have a really fun weekend; and even better, you'll be able to spend it with our friends from norcal",
-        "This DNA-sequenced heart is made from the combination of both our hearts",
-        "So long as this heart beats, my love for you will be forever",
-        "If you're ever having a bad day, come to this website and just relax and calm your mind",
-        "I have also inputted a couple songs that we love to listen to when we're on the hill near your house",
-        "Also, I'm very excited to give your gifts to you and I hope you love them. Be ready :)",
-        "Remember to always follow your heart",
-        "Happy birthday my sweet pea",
-        "I love you",
-        "Always,",
-        "-Lucian (Your bab)"
-    ];
-
-    const startPrompt = document.getElementById('start-prompt');
-    const audioPlayer = new Audio();
-    const playPauseBtn = document.getElementById("play-pause");
-    const nextBtn = document.getElementById("next");
-    const prevBtn = document.getElementById("prev");
-    const songTitleElement = document.getElementById('song-title');
-
-    var firstSong = "audio/Karencici -  愛你但說不出口.mp3";
-    var otherSongs = [
-        "audio/P-Lo, Ymtk - SILK.mp3",
-        "audio/Baby Bash - Suga Suga.mp3",
-        "audio/Clairo - Add Up My Love.mp3",
-        "audio/Giveon - Stuck On You.mp3",
-        "audio/Raveena - If Only.mp3",
-        "audio/slchld - you won't be there for me.mp3",
-        "audio/Still Woozy - Anyone But You.mp3",
-        "audio/박재범 (Jay Park) & 닝닝 (NINGNING) - 妳在哪裡 (WYA) Remix.mp3",
-        "audio/Sabrina Carpenter - Juno.mp3",
-    ];
-
-    var shuffledSongs = [firstSong].concat(otherSongs.sort(() => Math.random() - 0.5));
-    var songIndex = 0;
-    var previousIndex = -1;
-    var prevClickTime = 0;
-
-    function playSong(index) {
-        audioPlayer.src = shuffledSongs[index];
-        songTitleElement.textContent = getSongName(shuffledSongs[index]);
+    try {
+        // Initialize audio with validation
+        const validSongs = await AudioLoader.initializeAudio();
         
-        audioPlayer.play().then(() => {
-            audioPlayer.muted = false;
-            if (playPauseBtn) {
-                playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
+        if (validSongs.length === 0) {
+            throw new Error('No valid audio files found');
+        }
+
+        // Update audio controls with valid songs
+        audioControls.songs = validSongs;
+        
+        // Add styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .hidden-initially {
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.5s ease-in-out;
             }
-        }).catch((error) => {
-            console.warn("Playback failed:", error);
+            .visible {
+                opacity: 1;
+                pointer-events: auto;
+            }
+        `;
+        document.head.appendChild(style);
+
+        var mobile = window.isDevice;
+        var koef = mobile ? 0.5 : 1;
+        var canvas = document.getElementById('heart');
+        var ctx = canvas.getContext('2d');
+        var width = canvas.width = koef * innerWidth;
+        var height = canvas.height = koef * innerHeight;
+
+        ctx.fillStyle = "rgba(0,0,0,1)";
+        ctx.fillRect(0, 0, width, height);
+
+        // Hide controls initially
+        const controlElements = document.querySelectorAll('#fireworks-btn, #audio-controls');
+        controlElements.forEach(element => {
+            if (element) element.classList.add('hidden-initially');
         });
-    }
 
-    function getSongName(path) {
-        return path.replace('audio/', '').replace('.mp3', '');
-    }
+        var textContainer = document.getElementById('text-container');
+        var messages = [
+            "Hey bab, I know this is very unconventional",
+            "But I thought to try this new letter giving idea for your birthday",
+            "I wanted to put my skills to the test and make something special for you",
+            "I figured, I should make something memorable and last forever. Even to the end of time...",
+            "I'm writing this to you November 13th, 2024 at home, waiting for you to come over to celebrate your birthday weekend",
+            "We're going to have a really fun weekend; and even better, you'll be able to spend it with our friends from norcal",
+            "This DNA-sequenced heart is made from the combination of both our hearts",
+            "So long as this heart beats, my love for you will be forever",
+            "If you're ever having a bad day, come to this website and just relax and calm your mind",
+            "I have also inputted a couple songs that we love to listen to when we're on the hill near your house",
+            "Also, I'm very excited to give your gifts to you and I hope you love them. Be ready :)",
+            "Remember to always follow your heart",
+            "Happy birthday my sweet pea",
+            "I love you",
+            "Always,",
+            "-Lucian (Your bab)"
+        ];
 
-    function nextSong() {
-        previousIndex = songIndex;
-        songIndex = (songIndex + 1) % shuffledSongs.length;
-        playSong(songIndex);
-    }
+        const startPrompt = document.getElementById('start-prompt');
+        const audioPlayer = new Audio();
+        const playPauseBtn = document.getElementById("play-pause");
+        const nextBtn = document.getElementById("next");
+        const prevBtn = document.getElementById("prev");
+        const songTitleElement = document.getElementById('song-title');
 
-    function prevSong() {
-        const currentTime = Date.now();
-        if (currentTime - prevClickTime < 500) {
-            songIndex = (songIndex - 1 + shuffledSongs.length) % shuffledSongs.length;
+        var firstSong = "audio/Karencici -  愛你但說不出口.mp3";
+        var otherSongs = [
+            "https://username.github.io/project-name/audio/P-Lo, Ymtk - SILK.mp3",
+            "audio/Baby Bash - Suga Suga.mp3",
+            "audio/Clairo - Add Up My Love.mp3",
+            "audio/Giveon - Stuck On You.mp3",
+            "audio/Raveena - If Only.mp3",
+            "audio/slchld - you won't be there for me.mp3",
+            "audio/Still Woozy - Anyone But You.mp3",
+            "audio/박재범 (Jay Park) & 닝닝 (NINGNING) - 妳在哪裡 (WYA) Remix.mp3",
+            "audio/Sabrina Carpenter - Juno.mp3",
+        ];
+
+        var shuffledSongs = [firstSong].concat(otherSongs.sort(() => Math.random() - 0.5));
+        var songIndex = 0;
+        var previousIndex = -1;
+        var prevClickTime = 0;
+
+        function playSong(index) {
+            audioPlayer.src = shuffledSongs[index];
+            songTitleElement.textContent = getSongName(shuffledSongs[index]);
+            
+            audioPlayer.play().then(() => {
+                audioPlayer.muted = false;
+                if (playPauseBtn) {
+                    playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
+                }
+            }).catch((error) => {
+                console.warn("Playback failed:", error);
+            });
+        }
+
+        function getSongName(path) {
+            return path.replace('audio/', '').replace('.mp3', '');
+        }
+
+        function nextSong() {
+            previousIndex = songIndex;
+            songIndex = (songIndex + 1) % shuffledSongs.length;
             playSong(songIndex);
-        } else {
-            audioPlayer.currentTime = 0;
         }
-        prevClickTime = currentTime;
-    }
 
-    // Audio control event listeners
-    if (nextBtn) nextBtn.addEventListener("click", nextSong);
-    if (prevBtn) prevBtn.addEventListener("click", prevSong);
-    if (playPauseBtn) {
-        playPauseBtn.addEventListener("click", () => {
-            if (audioPlayer.paused) {
-                audioPlayer.play();
-                playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
+        function prevSong() {
+            const currentTime = Date.now();
+            if (currentTime - prevClickTime < 500) {
+                songIndex = (songIndex - 1 + shuffledSongs.length) % shuffledSongs.length;
+                playSong(songIndex);
             } else {
-                audioPlayer.pause();
-                playPauseBtn.innerHTML = '<div class="play-icon"></div>';
+                audioPlayer.currentTime = 0;
             }
-        });
-    }
+            prevClickTime = currentTime;
+        }
 
-    audioPlayer.addEventListener("ended", nextSong);
+        // Audio control event listeners
+        if (nextBtn) nextBtn.addEventListener("click", nextSong);
+        if (prevBtn) prevBtn.addEventListener("click", prevSong);
+        if (playPauseBtn) {
+            playPauseBtn.addEventListener("click", () => {
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                    playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
+                } else {
+                    audioPlayer.pause();
+                    playPauseBtn.innerHTML = '<div class="play-icon"></div>';
+                }
+            });
+        }
 
-    function changeText() {
-        if (!textContainer || isAnimating) return;
-        
-        isAnimating = true;
-        textContainer.style.animation = 'none';
-        textContainer.offsetHeight;
-        
-        if (currentIndex === 0) {
-            textContainer.textContent = '';
-            setTimeout(() => {
+        audioPlayer.addEventListener("ended", nextSong);
+
+        function changeText() {
+            if (!textContainer || isAnimating) return;
+            
+            isAnimating = true;
+            textContainer.style.animation = 'none';
+            textContainer.offsetHeight;
+            
+            if (currentIndex === 0) {
+                textContainer.textContent = '';
+                setTimeout(() => {
+                    textContainer.textContent = messages[currentIndex];
+                    textContainer.style.animation = 'fadeInOut 10s ease-in-out';
+                    currentIndex = (currentIndex + 1) % messages.length;
+                    
+                    setTimeout(() => {
+                        isAnimating = false;
+                        changeText();
+                    }, 10000);
+                }, 2000);
+            } else {
                 textContainer.textContent = messages[currentIndex];
                 textContainer.style.animation = 'fadeInOut 10s ease-in-out';
                 currentIndex = (currentIndex + 1) % messages.length;
@@ -278,45 +386,44 @@ function init() {
                     isAnimating = false;
                     changeText();
                 }, 10000);
-            }, 2000);
-        } else {
-            textContainer.textContent = messages[currentIndex];
-            textContainer.style.animation = 'fadeInOut 10s ease-in-out';
-            currentIndex = (currentIndex + 1) % messages.length;
-            
-            setTimeout(() => {
-                isAnimating = false;
-                changeText();
-            }, 10000);
+            }
+        }
+
+        // Set up click handler
+        if (startPrompt) {
+            document.addEventListener('click', function startExperience(e) {
+                if (audioPlayer.paused) {
+                    // Remove the click listener
+                    document.removeEventListener('click', startExperience);
+                    
+                    // Hide start prompt
+                    startPrompt.style.display = 'none';
+                    
+                    // Show controls with slight delay
+                    setTimeout(() => {
+                        controlElements.forEach(element => {
+                            if (element) element.classList.add('visible');
+                        });
+                    }, 500);
+
+                    // Start everything
+                    playSong(songIndex);
+                    heartAnimation();
+                    changeText();
+                    initCursor();
+                    initFireworks();
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Initialization failed:', error);
+        // Update UI to show error
+        const textContainer = document.getElementById('text-container');
+        if (textContainer) {
+            textContainer.textContent = 'Error loading audio files. Please check console for details.';
         }
     }
 
-    // Set up click handler
-    if (startPrompt) {
-        document.addEventListener('click', function startExperience(e) {
-            if (audioPlayer.paused) {
-                // Remove the click listener
-                document.removeEventListener('click', startExperience);
-                
-                // Hide start prompt
-                startPrompt.style.display = 'none';
-                
-                // Show controls with slight delay
-                setTimeout(() => {
-                    controlElements.forEach(element => {
-                        if (element) element.classList.add('visible');
-                    });
-                }, 500);
-
-                // Start everything
-                playSong(songIndex);
-                heartAnimation();
-                changeText();
-                initCursor();
-                initFireworks();
-            }
-        });
-    }
 }
 
 // Cursor and trail effect
