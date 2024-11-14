@@ -263,6 +263,7 @@ function init() {
         "audio/Jay Park - (WYA) Remix.mp3",
         "audio/Sabrina Carpenter - Juno.mp3",
     ];
+    //beep boop
 
     var shuffledSongs = [firstSong].concat(otherSongs.sort(() => Math.random() - 0.5));
     var songIndex = 0;
