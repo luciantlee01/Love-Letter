@@ -42,8 +42,27 @@ function initializeAudioControls() {
     const prevBtn = document.getElementById("prev");
     const songTitleElement = document.getElementById('song-title');
 
-    // Make sure first song is properly set
-    var firstSong = "audio/Love you.mp3";
+    // Configure audio context with user interaction
+    let audioContext;
+
+    // Function to ensure audio context is initialized
+    async function initAudioContext() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
+        }
+        return audioContext;
+    }
+
+    // Ensure base URL is correct for GitHub Pages
+    const baseURL = window.location.hostname.includes('github.io') 
+        ? `${window.location.pathname.split('/').slice(0, -1).join('/')}/`
+        : '/';
+
+    // Make sure first song is properly set with correct path
+    var firstSong = `${baseURL}audio/Love you.mp3`;
     var otherSongs = [
         "audio/SILK.mp3",
         "audio/Suga Suga.mp3",
@@ -54,38 +73,59 @@ function initializeAudioControls() {
         "audio/Anyone But You.mp3",
         "audio/(WYA) Remix.mp3",
         "audio/Sabrina Carpenter - Juno.mp3",
-    ];
+    ].map(song => `${baseURL}${song}`);
 
     audioControls.songs = [firstSong].concat(otherSongs.sort(() => Math.random() - 0.5));
-    
-    function playSong(index) {
-        if (audioPreloader.src.includes(audioControls.songs[index])) {
-            const temp = currentAudioPlayer;
-            currentAudioPlayer = audioPreloader;
-            audioPreloader = temp;
-        } else {
-            currentAudioPlayer.src = audioControls.songs[index];
-        }
 
-        songTitleElement.textContent = getSongName(audioControls.songs[index]);
-        
-        // Ensure play promise is handled properly
-        const playPromise = currentAudioPlayer.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
+    async function playSong(index) {
+        try {
+            // Ensure audio context is initialized
+            await initAudioContext();
+
+            // Set the source
+            if (audioPreloader.src.includes(audioControls.songs[index])) {
+                const temp = currentAudioPlayer;
+                currentAudioPlayer = audioPreloader;
+                audioPreloader = temp;
+            } else {
+                currentAudioPlayer.src = audioControls.songs[index];
+            }
+
+            // Update UI
+            songTitleElement.textContent = getSongName(audioControls.songs[index]);
+
+            // Load and play with error handling
+            await currentAudioPlayer.load();
+            const playPromise = currentAudioPlayer.play();
+
+            if (playPromise !== undefined) {
+                await playPromise;
                 currentAudioPlayer.muted = false;
                 playPauseBtn.innerHTML = '<div class="pause-icon"></div>';
                 preloadNextSong();
-            }).catch(error => {
-                console.warn("Playback failed:", error);
-                // Try playing again after a short delay
-                setTimeout(() => {
-                    currentAudioPlayer.play().catch(e => console.warn("Retry failed:", e));
-                }, 100);
-            });
+            }
+        } catch (error) {
+            console.warn("Playback failed:", error);
+            // Retry logic with a delay
+            setTimeout(() => {
+                currentAudioPlayer.play().catch(e => {
+                    console.warn("Retry failed:", error);
+                    playPauseBtn.innerHTML = '<div class="play-icon"></div>';
+                });
+            }, 1000);
         }
     }
 
+    // Preload next song
+    function preloadNextSong() {
+        const nextIndex = (audioControls.songIndex + 1) % audioControls.songs.length;
+        if (!audioPreloader.src.includes(audioControls.songs[nextIndex])) {
+            audioPreloader.src = audioControls.songs[nextIndex];
+            audioPreloader.load();
+        }
+    }
+
+    // Set up next and previous song controls
     function nextSong() {
         audioControls.previousIndex = audioControls.songIndex;
         audioControls.songIndex = (audioControls.songIndex + 1) % audioControls.songs.length;
@@ -103,6 +143,7 @@ function initializeAudioControls() {
         audioControls.prevClickTime = currentTime;
     }
 
+    // Event listeners for audio controls
     currentAudioPlayer.addEventListener("ended", nextSong);
 
     playPauseBtn.addEventListener("click", () => {
@@ -118,16 +159,27 @@ function initializeAudioControls() {
     nextBtn.addEventListener("click", nextSong);
     prevBtn.addEventListener("click", prevSong);
 
+    // Event listener to ensure user gesture initializes audio context
+    document.addEventListener('click', async function initializeAudio() {
+        try {
+            await initAudioContext();
+            document.removeEventListener('click', initializeAudio);
+        } catch (error) {
+            console.warn("Audio context initialization failed:", error);
+        }
+    }, { once: true });
+
+    // Helper function to format song title
     function getSongName(path) {
-        let name = path.replace('audio/', '').replace('.mp3', '');
-        return name;
+        return path.replace('audio/', '').replace('.mp3', '');
     }
 
     preloadNextSong();
     audioControls.isInitialized = true;
-    
+
     return playSong;
 }
+
 
 function init() {
     if (loaded) return;
