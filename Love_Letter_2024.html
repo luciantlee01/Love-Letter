@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>I Love You</title>
+        <link rel="stylesheet" href="./style.css">
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+<body>
+    <canvas id="heart"></canvas>
+    <div id="text-container"></div>
+    <div class="cursor"></div>
+    <div class="cursor-trail"></div>
+    
+    <!-- Audio Player and Controls -->
+    <audio id="audio-player" preload="auto"></audio>
+    <div id="audio-controls">
+        <button id="prev" class="control-button">
+            <div class="prev-icon"></div>
+        </button>
+        <button id="play-pause" class="control-button">
+            <div class="play-icon"></div>
+        </button>
+        <button id="next" class="control-button">
+            <div class="next-icon"></div>
+        </button>
+        <div id="song-title"></div>
+    </div>
+
+    <div id="start-prompt" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; cursor: pointer; z-index: 1000;">
+        ❤ Click anywhere to start ❤
+    </div>
+    <button id="fireworks-btn" class="fireworks-button">Celebrate! 🎆</button>
+
+
+    <script src="./script.js"></script>
+</body>
+</html>
