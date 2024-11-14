@@ -200,7 +200,7 @@ function init() {
         "audio/If Only.mp3",
         "audio/you won't be there for me.mp3",
         "audio/Anyone But You.mp3",
-        "audio/WYA) Remix.mp3",
+        "audio/(WYA) Remix.mp3",
         "audio/Sabrina Carpenter - Juno.mp3",
     ];
 
