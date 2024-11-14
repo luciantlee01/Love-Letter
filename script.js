@@ -295,27 +295,32 @@ function init() {
     // Set up click handler
     if (startPrompt) {
         document.addEventListener('click', function startExperience(e) {
-            if (audioPlayer.paused) {
-                // Remove the click listener
-                document.removeEventListener('click', startExperience);
-                
-                // Hide start prompt
-                startPrompt.style.display = 'none';
-                
-                // Show controls with slight delay
-                setTimeout(() => {
-                    controlElements.forEach(element => {
-                        if (element) element.classList.add('visible');
-                    });
-                }, 500);
-
-                // Start everything
-                playSong(songIndex);
-                heartAnimation();
-                changeText();
-                initCursor();
-                initFireworks();
+            // Remove the click listener after the first click
+            document.removeEventListener('click', startExperience);
+        
+            // Resume the audio context if suspended
+            if (currentAudioPlayer.context && currentAudioPlayer.context.state === 'suspended') {
+                currentAudioPlayer.context.resume().then(() => {
+                    console.log('Audio context resumed successfully');
+                }).catch(error => console.warn("Error resuming audio context:", error));
             }
+        
+            // Hide start prompt
+            startPrompt.style.display = 'none';
+        
+            // Show controls with slight delay
+            setTimeout(() => {
+                controlElements.forEach(element => {
+                    if (element) element.classList.add('visible');
+                });
+            }, 500);
+        
+            // Start everything
+            playSong(songIndex);
+            heartAnimation();
+            changeText();
+            initCursor();
+            initFireworks();
         });
     }
 }
