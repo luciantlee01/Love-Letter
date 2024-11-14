@@ -188,6 +188,84 @@ function initializeAudioControls() {
     return playSong;
 }
 
+// Mobile scaling handler
+function handleMobileScaling() {
+    // Fix for iOS height issues
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+    // Update canvas scaling for mobile
+    const mobile = window.isDevice;
+    const koef = mobile ? 0.5 : 1;
+    const canvas = document.getElementById('heart');
+    if (canvas) {
+        // Adjust for device pixel ratio
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        
+        canvas.width = rect.width * dpr * koef;
+        canvas.height = rect.height * dpr * koef;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr * koef, dpr * koef);
+    }
+}
+
+// Add event listeners for scaling
+window.addEventListener('resize', handleMobileScaling);
+window.addEventListener('orientationchange', handleMobileScaling);
+
+// Initial call
+handleMobileScaling();
+
+// Prevent default touch behaviors
+document.addEventListener('touchmove', (e) => {
+    if (e.touches.length > 1) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+document.addEventListener('gesturestart', (e) => {
+    e.preventDefault();
+});
+
+function handleCanvasScaling() {
+    const canvas = document.getElementById('heart');
+    const ctx = canvas.getContext('2d');
+    
+    // Remove any transforms
+    canvas.style.transform = 'none';
+    
+    // Make canvas fill the viewport
+    function resizeCanvas() {
+        // Get window dimensions
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        // Set canvas size to match window
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Set canvas style dimensions
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        
+        // Clear and fill with black
+        ctx.fillStyle = "rgba(0,0,0,1)";
+        ctx.fillRect(0, 0, width, height);
+    }
+    
+    // Initial resize
+    resizeCanvas();
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+    });
+}
 
 function init() {
     if (loaded) return;
@@ -196,17 +274,44 @@ function init() {
     // Add styles
     const style = document.createElement('style');
     style.textContent = `
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        #heart {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+        }
+        
         .hidden-initially {
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.5s ease-in-out;
         }
+        
         .visible {
             opacity: 1;
             pointer-events: auto;
         }
+        
+        #controls-container {
+            position: fixed;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            left: 0;
+            right: 0;
+            z-index: 1;
+        }
     `;
     document.head.appendChild(style);
+    handleCanvasScaling();
 
     var mobile = window.isDevice;
     var koef = mobile ? 0.5 : 1;
@@ -237,11 +342,12 @@ function init() {
         "If you're ever having a bad day, come to this website and just relax and calm your mind",
         "I have also inputted a couple songs that we love to listen to when we're on the hill near your house",
         "Also, I'm very excited to give your gifts to you and I hope you love them. Be ready :)",
+        "P.S this took a LOT of math and coding so I'm really brain fried right now LOL",
         "Remember to always follow your heart",
         "Happy birthday my sweet pea",
         "I love you",
         "Always,",
-        "-Lucian (Your bab)"
+        "-Lucian (Bub)"
     ];
 
     const startPrompt = document.getElementById('start-prompt');
@@ -414,8 +520,8 @@ function initCursor() {
         // Update trail positions with delay
         trails.forEach((trail, index) => {
             setTimeout(() => {
-                trail.x = e.clientX - 8;
-                trail.y = e.clientY - 8;
+                trail.x = e.clientX - 9;
+                trail.y = e.clientY - 13;
                 trail.element.style.left = trail.x + 'px';
                 trail.element.style.top = trail.y + 'px';
             }, index * 70);

@@ -27,7 +27,7 @@ canvas {
     width: 100%;
     bottom: 50px;
     text-align: center;
-    font-size: 24px;
+    font-size: 20px;
     color: white;
     opacity: 0;
     animation: fadeInOut 10s ease-in-out infinite;
@@ -221,4 +221,142 @@ canvas {
 .fireworks-button:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translateX(-50%) scale(1.1);
+}
+
+/* Mobile-specific viewport and iOS status bar fixes */
+@viewport {
+    width: device-width;
+    height: device-height;
+    initial-scale: 1;
+    minimum-scale: 1;
+    maximum-scale: 1;
+    user-scalable: no;
+}
+
+/* Fix iOS status bar space */
+@supports (-webkit-touch-callout: none) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        min-height: -webkit-fill-available;
+    }
+}
+
+/* Base styles for controls */
+#controls-container {
+    position: fixed;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 0 20px;
+    z-index: 1000;
+}
+
+#audio-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Mobile-specific adjustments */
+@media screen and (max-width: 768px) {
+    /* Adjust heart canvas size */
+    #heart {
+        transform: scale(0.7);
+        transform-origin: center center;
+    }
+    
+    /* Reorganize controls for mobile */
+    #controls-container {
+        flex-direction: column;
+        gap: 15px;
+        bottom: max(30px, env(safe-area-inset-bottom));
+    }
+    
+    /* Adjust button sizes for mobile */
+    .control-button {
+        width: 40px !important;
+        height: 40px !important;
+        padding: 8px !important;
+    }
+    
+    /* Adjust icon sizes */
+    .play-icon, .pause-icon, .next-icon, .prev-icon {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    
+    /* Adjust fireworks button */
+    #fireworks-btn {
+        font-size: 14px !important;
+        padding: 8px 16px !important;
+        margin-top: 10px;
+    }
+    
+    /* Adjust song title display */
+    #song-title {
+        font-size: 14px;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* iPhone-specific adjustments */
+@media screen and (max-width: 428px) { /* iPhone 11 Pro Max width */
+    #heart {
+        transform: scale(0.6);
+    }
+    
+    #controls-container {
+        bottom: max(40px, env(safe-area-inset-bottom));
+    }
+    
+    .control-button {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    /* Further reduce sizes for smaller iPhones */
+    @media screen and (max-width: 375px) {
+        #heart {
+            transform: scale(0.5);
+        }
+        
+        .control-button {
+            width: 32px !important;
+            height: 32px !important;
+        }
+    }
+}
+
+/* Hide scrollbars but keep functionality */
+body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    overflow-y: auto;
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+/* Prevent overscroll bounce effect on iOS */
+html {
+    position: fixed;
+    height: 100%;
+    overflow: hidden;
+    width: 100%;
+}
+
+body {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: fixed;
+    width: 100%;
 }
