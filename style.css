@@ -319,7 +319,7 @@ canvas {
 /* iPhone-specific adjustments */
 @media screen and (max-width: 428px) { /* iPhone 11 Pro Max width */
     #heart {
-        transform: scale(0.6);
+        transform: scale(0.3);
     }
     
     #controls-container {
@@ -416,3 +416,61 @@ body {
     position: fixed;
     width: 100%;
 }
+
+#start-prompt {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    font-size: 24px;
+    width: 90%;
+    max-width: 500px;
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    animation: pulse 2s infinite;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Optional pulse animation */
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+/* Mobile adjustments */
+@media screen and (max-width: 768px) {
+    #start-prompt {
+        font-size: 20px;
+        width: 80%;
+        padding: 15px;
+    }
+}
+
+/* Smaller devices */
+@media screen and (max-width: 375px) {
+    #start-prompt {
+        font-size: 18px;
+        width: 85%;
+        padding: 10px;
+    }
+}
+
+/* Ensure the prompt is above all other elements */
+#start-prompt {
+    position: fixed;
+    z-index: 9999;
+}
+
+/* Prevent any touch highlighting */
+#start-prompt {
+    -webkit-tap-highlight-color: transparent;
+}
+
