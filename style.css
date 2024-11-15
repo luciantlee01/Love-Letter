@@ -25,9 +25,9 @@ canvas {
 #text-container {
     position: fixed;
     width: 100%;
-    bottom: 50px;
+    bottom: 600px;
     text-align: center;
-    font-size: 20px;
+    font-size: 24px;
     color: white;
     opacity: 0;
     animation: fadeInOut 10s ease-in-out infinite;
@@ -54,8 +54,8 @@ canvas {
 
 #audio-controls {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    bottom: 150px;
+    right: 1150px;
     display: flex;
     gap: 15px;
     background-color: rgba(255, 255, 255, 0.1);
@@ -204,7 +204,7 @@ canvas {
 
 .fireworks-button {
     position: fixed;
-    top: 20px;
+    top: 200px;
     left: 50%;
     transform: translateX(-50%);
     padding: 10px 20px;
@@ -529,5 +529,4 @@ body {
 
 /* Prevent any touch highlighting */
 #start-prompt {
-    -webkit-tap-highlight-color: transparent;
-}
+    -webkit-tap-highlight-color: transp

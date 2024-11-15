@@ -562,7 +562,7 @@ function initFireworks() {
     const ctx = canvas.getContext('2d');
 
     class Firework {
-        constructor(x, y, targetX, targetY, color, particleCount = 100) {
+        constructor(x, y, targetX, targetY, color, particleCount = 50) {
             this.x = x;
             this.y = y;
             this.startX = x;
