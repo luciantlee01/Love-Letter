@@ -529,4 +529,5 @@ body {
 
 /* Prevent any touch highlighting */
 #start-prompt {
-    -webkit-tap-highlight-color: transp
+    -webkit-tap-highlight-color: transparent;
+}
